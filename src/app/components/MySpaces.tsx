@@ -35,7 +35,9 @@ export default function MySpaces({ userId, onBack, apiUrl, apiKey }: MySpacesPro
   const fetchSpaces = async () => {
     try {
       const response = await fetch(`${apiUrl}/spaces/owner/${userId}`, {
-        headers: { Authorization: `Bearer ${apiKey}` },
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
       });
       const data = await response.json();
       setSpaces(data.spaces || []);
@@ -53,7 +55,7 @@ export default function MySpaces({ userId, onBack, apiUrl, apiKey }: MySpacesPro
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           ownerId: userId,

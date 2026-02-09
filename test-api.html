@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест API Supabase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+        }
+        h2 {
+            color: #2196F3;
+            margin-top: 0;
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            display: none;
+        }
+        #result.error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        #result.success {
+            background: #e8f5e9;
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+        .info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .info strong {
+            color: #856404;
+        }
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .test-buttons button {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тестирование API Supabase Edge Functions</h1>
+        
+        <div class="info">
+            <strong>⚠️ Важно:</strong> Перед тестированием убедитесь, что вы заполнили правильные URL и API ключи ниже.
+        </div>
+
+        <div class="section">
+            <h2>1️⃣ Конфигурация</h2>
+            
+            <label for="supabaseUrl">Supabase URL:</label>
+            <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co">
+            
+            <label for="supabaseKey">Supabase Anon Key:</label>
+            <input type="text" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div class="section">
+            <h2>2️⃣ Тесты Health Check</h2>
+            <p>Проверка доступности сервера</p>
+            <button onclick="testHealth()">🔍 Проверить Health Check</button>
+        </div>
+
+        <div class="section">
+            <h2>3️⃣ Тесты пользователей (Users)</h2>
+            
+            <label for="userId">User ID (тестовый):</label>
+            <input type="text" id="userId" value="test-user-123">
+            
+            <label for="userName">Имя:</label>
+            <input type="text" id="userName" value="Тестовый Пользователь">
+            
+            <label for="telegramUsername">Telegram Username:</label>
+            <input type="text" id="telegramUsername" value="@testuser">
+            
+            <label for="phoneNumber">Номер телефона:</label>
+            <input type="text" id="phoneNumber" value="+7 999 123-45-67">
+            
+            <label>
+                <input type="checkbox" id="isOwner"> Владелец парковки
+            </label>
+
+            <div class="test-buttons">
+                <button onclick="createUser()">➕ Создать пользователя</button>
+                <button onclick="getUser()">🔍 Получить пользователя</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>4️⃣ Тесты парковочных мест (Spaces)</h2>
+            
+            <label for="spaceNumber">Номер места:</label>
+            <input type="text" id="spaceNumber" value="A-123">
+            
+            <label for="location">Локация:</label>
+            <input type="text" id="location" value="Москва, ул. Примерная, д. 1">
+
+            <div class="test-buttons">
+                <button onclick="createSpace()">➕ Создать парковочное место</button>
+                <button onclick="getOwnerSpaces()">🔍 Получить места владельца</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>5️⃣ Результат запроса</h2>
+            <div id="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>6️⃣ Быстрая диагностика</h2>
+            <p>Выполнить полный набор тестов для диагностики проблем</p>
+            <button onclick="runFullDiagnostics()">🚀 Запустить полную диагностику</button>
+        </div>
+    </div>
+
+    <script>
+        let diagnosticsLog = [];
+
+        function getApiUrl() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            if (!url) {
+                showResult('❌ Ошибка: Введите Supabase URL!', true);
+                throw new Error('Supabase URL не указан');
+            }
+            return `${url}/functions/v1/make-server-48e86749`;
+        }
+
+        function getApiKey() {
+            const key = document.getElementById('supabaseKey').value.trim();
+            if (!key) {
+                showResult('❌ Ошибка: Введите Supabase Anon Key!', true);
+                throw new Error('Supabase Anon Key не указан');
+            }
+            return key;
+        }
+
+        function showResult(text, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = text;
+            resultDiv.className = isError ? 'error' : 'success';
+            resultDiv.style.display = 'block';
+            console.log(text);
+        }
+
+        function logDiagnostic(message, success) {
+            diagnosticsLog.push({
+                time: new Date().toISOString(),
+                message,
+                success
+            });
+        }
+
+        async function testHealth() {
+            const apiUrl = getApiUrl();
+            const apiKey = getApiKey();
+            const fullUrl = `${apiUrl}/health`;
+            
+            showResult(`⏳ Проверка health endpoint...\n\nURL: ${fullUrl}\nТестируем разные методы аутентификации...`, false);
+            
+            // Попробуем 3 разных способа
+            const methods = [
+                { name: 'Authorization: Bearer', headers: { 'Authorization': `Bearer ${apiKey}` } },
+                { name: 'apikey header', headers: { 'apikey': apiKey } },
+                { name: 'Authorization: apikey', headers: { 'Authorization': apiKey } }
+            ];
+            
+            for (const method of methods) {
+                try {
+                    const response = await fetch(fullUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...method.headers
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        showResult(`✅ Health Check успешен!\n\n🎉 Метод: ${method.name}\nURL: ${fullUrl}\nСтатус: ${response.status}\nОтвет: ${JSON.stringify(data, null, 2)}`, false);
+                        logDiagnostic('Health check успешен', true);
+                        
+                        // Сохраним рабочий метод
+                        localStorage.setItem('workingAuthMethod', JSON.stringify(method));
+                        return;
+                    } else {
+                        const data = await response.json().catch(() => ({}));
+                        console.log(`❌ ${method.name} failed:`, response.status, data);
+                    }
+                } catch (error) {
+                    console.log(`❌ ${method.name} error:`, error.message);
+                }
+            }
+            
+            // Если все методы провалились
+            showResult(`❌ Все методы аутентификации провалились!\n\nURL: ${fullUrl}\n\n🔍 Проверьте:\n1. Открыта ли страница через HTTPS или localhost\n2. CORS настроен в Edge Function\n3. Функция действительно активна\n4. Проверьте консоль браузера (F12) для деталей`, true);
+            logDiagnostic('Health check провален - все методы', false);
+        }
+
+        async function createUser() {
+            try {
+                const apiUrl = getApiUrl();
+                const apiKey = getApiKey();
+                
+                const userId = document.getElementById('userId').value.trim();
+                const name = document.getElementById('userName').value.trim();
+                const telegramUsername = document.getElementById('telegramUsername').value.trim();
+                const phoneNumber = document.getElementById('phoneNumber').value.trim();
+                const isOwner = document.getElementById('isOwner').checked;
+
+                if (!userId || !name) {
+                    showResult('��� Ошибка: User ID и Имя обязательны!', true);
+                    return;
+                }
+
+                showResult('⏳ Создание пользователя...', false);
+
+                const response = await fetch(`${apiUrl}/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        name,
+                        telegramUsername,
+                        phoneNumber,
+                        isOwner,
+                        language: 'ru'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Пользователь успешно создан!\n\nСтатус: ${response.status}\nОтвет:\n${JSON.stringify(data, null, 2)}`, false);
+                    logDiagnostic('Создание пользователя успешно', true);
+                } else {
+                    showResult(`❌ Ошибка создания пользователя!\n\nСтатус: ${response.status}\nОтвет:\n${JSON.stringify(data, null, 2)}`, true);
+                    logDiagnostic('Ошибка создания пользователя', false);
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка при создании пользователя:\n${error.message}\n\nStack:\n${error.stack}`, true);
+                logDiagnostic(`Ошибка создания пользователя: ${error.message}`, false);
+            }
+        }
+
+        async function getUser() {
+            try {
+                const apiUrl = getApiUrl();
+                const apiKey = getApiKey();
+                const userId = document.getElementById('userId').value.trim();
+
+                if (!userId) {
+                    showResult('❌ Ошибка: Введите User ID!', true);
+                    return;
+                }
+
+                showResult('⏳ Получение данных пользователя...', false);
+
+                const response = await fetch(`${apiUrl}/users/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Пользователь найден!\n\nСтатус: ${response.status}\nДанные:\n${JSON.stringify(data, null, 2)}`, false);
+                    logDiagnostic('Получение пользователя успешно', true);
+                } else {
+                    showResult(`❌ Пользователь не найден!\n\nСтатус: ${response.status}\nОтвет:\n${JSON.stringify(data, null, 2)}`, true);
+                    logDiagnostic('Пользователь не найден', false);
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка при получении пользователя:\n${error.message}`, true);
+                logDiagnostic(`Ошибка получения пользователя: ${error.message}`, false);
+            }
+        }
+
+        async function createSpace() {
+            try {
+                const apiUrl = getApiUrl();
+                const apiKey = getApiKey();
+                
+                const ownerId = document.getElementById('userId').value.trim();
+                const spaceNumber = document.getElementById('spaceNumber').value.trim();
+                const location = document.getElementById('location').value.trim();
+                const ownerName = document.getElementById('userName').value.trim();
+                const ownerTelegram = document.getElementById('telegramUsername').value.trim();
+                const ownerPhone = document.getElementById('phoneNumber').value.trim();
+
+                if (!ownerId || !spaceNumber) {
+                    showResult('❌ Ошибка: Owner ID и Номер места обязательны!', true);
+                    return;
+                }
+
+                showResult('⏳ Создание парковочного места...', false);
+
+                const response = await fetch(`${apiUrl}/spaces`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        ownerId,
+                        spaceNumber,
+                        location,
+                        ownerName,
+                        ownerTelegram,
+                        ownerPhone
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Парковочное место создано!\n\nСтатус: ${response.status}\nОтвет:\n${JSON.stringify(data, null, 2)}`, false);
+                    logDiagnostic('Создание парковочного места успешно', true);
+                } else {
+                    showResult(`❌ Ошибка создания места!\n\nСтатус: ${response.status}\nОтвет:\n${JSON.stringify(data, null, 2)}`, true);
+                    logDiagnostic('Ошибка создания парковочного места', false);
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка при создании места:\n${error.message}`, true);
+                logDiagnostic(`Ошибка создания места: ${error.message}`, false);
+            }
+        }
+
+        async function getOwnerSpaces() {
+            try {
+                const apiUrl = getApiUrl();
+                const apiKey = getApiKey();
+                const ownerId = document.getElementById('userId').value.trim();
+
+                if (!ownerId) {
+                    showResult('❌ Ошибка: Введите Owner ID!', true);
+                    return;
+                }
+
+                showResult('⏳ Получение парковочных мест владельца...', false);
+
+                const response = await fetch(`${apiUrl}/spaces/owner/${ownerId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ Места получены!\n\nСтатус: ${response.status}\nКоличество: ${data.spaces?.length || 0}\nДанные:\n${JSON.stringify(data, null, 2)}`, false);
+                    logDiagnostic('Получение мест владельца успешно', true);
+                } else {
+                    showResult(`❌ Ошибка получения мест!\n\nСтатус: ${response.status}\nОтвет:\n${JSON.stringify(data, null, 2)}`, true);
+                    logDiagnostic('Ошибка получения мест владельца', false);
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка при получении мест:\n${error.message}`, true);
+                logDiagnostic(`Ошибка получения мест: ${error.message}`, false);
+            }
+        }
+
+        async function runFullDiagnostics() {
+            diagnosticsLog = [];
+            showResult('🚀 Запуск полной диагностики...\n\nЭто займет несколько секунд...', false);
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Test 1: Health Check
+            await testHealth();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Test 2: Create User
+            await createUser();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Test 3: Get User
+            await getUser();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Summary
+            const successCount = diagnosticsLog.filter(log => log.success).length;
+            const totalCount = diagnosticsLog.length;
+            
+            let summary = `\n\n📊 ИТОГИ ДИАГНОСТИКИ:\n`;
+            summary += `${'='.repeat(50)}\n`;
+            summary += `✅ Успешно: ${successCount}/${totalCount}\n`;
+            summary += `❌ Провалено: ${totalCount - successCount}/${totalCount}\n\n`;
+            summary += `Детали:\n`;
+            diagnosticsLog.forEach((log, index) => {
+                summary += `${index + 1}. ${log.success ? '✅' : '❌'} ${log.message}\n`;
+            });
+
+            showResult(summary, successCount < totalCount);
+        }
+
+        // Загрузка сохраненных данных при старте
+        window.onload = function() {
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            
+            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+        };
+
+        // Сохранение данных при изменении
+        document.getElementById('supabaseUrl').addEventListener('change', function() {
+            localStorage.setItem('supabaseUrl', this.value);
+        });
+
+        document.getElementById('supabaseKey').addEventListener('change', function() {
+            localStorage.setItem('supabaseKey', this.value);
+        });
+    </script>
+</body>
+</html>

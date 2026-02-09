@@ -7,15 +7,17 @@ import BrowseListings from "@/app/components/BrowseListings";
 import CreateRequest from "@/app/components/CreateRequest";
 import BrowseRequests from "@/app/components/BrowseRequests";
 import Notifications from "@/app/components/Notifications";
-import { projectId, publicAnonKey } from "/utils/supabase/info";
-import { 
-  initTelegramWebApp, 
-  getUserId, 
-  getUserDisplayName, 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+import {
+  initTelegramWebApp,
+  getUserId,
+  getUserDisplayName,
   getTelegramUsername,
-  isTelegramWebApp 
+  isTelegramWebApp,
 } from "@/app/components/TelegramWebApp";
 import { Toaster } from "@/app/components/ui/sonner";
+import { toast } from "sonner";
 
 export default function App() {
   const [currentView, setCurrentView] = useState("home");
@@ -23,10 +25,24 @@ export default function App() {
   const [userId, setUserId] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-48e86749`;
-  const API_KEY = publicAnonKey;
+  const API_URL = `${SUPABASE_URL}/functions/v1/make-server-48e86749`;
+  const API_KEY = SUPABASE_ANON_KEY;
 
   useEffect(() => {
+    // Validate Supabase configuration
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      console.error("❌ FATAL: Supabase configuration is missing!");
+      console.error("Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env file");
+      toast.error("Ошибка: Не настроено подключение к Supabase", {
+        duration: 10000,
+      });
+    } else {
+      console.log("✅ Supabase configuration loaded:", {
+        url: SUPABASE_URL,
+        keyPreview: SUPABASE_ANON_KEY.substring(0, 20) + "..."
+      });
+    }
+
     // Initialize Telegram WebApp
     initTelegramWebApp();
     initializeUser();
@@ -40,7 +56,9 @@ export default function App() {
     // Try to fetch existing user profile
     try {
       const response = await fetch(`${API_URL}/users/${currentUserId}`, {
-        headers: { Authorization: `Bearer ${API_KEY}` },
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`
+        }
       });
       
       if (response.ok) {
@@ -71,11 +89,18 @@ export default function App() {
 
   const handleSaveProfile = async (profileData: any) => {
     try {
+      // Validate environment variables
+      if (!API_URL || !API_KEY) {
+        toast.error("Ошибка конфигурации: переменные Supabase не установлены");
+        console.error("Missing Supabase configuration:", { API_URL, API_KEY });
+        return;
+      }
+
       const response = await fetch(`${API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
+          "Authorization": `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
           userId,
@@ -86,10 +111,18 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         setUserProfile(data.user);
+        toast.success("Профиль успешно сохранен!");
         setCurrentView("home");
+      } else {
+        // Handle server errors
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        toast.error(`Ошибка сохранения профиля: ${errorData.error || response.statusText}`);
+        console.error("Server error:", response.status, errorData);
       }
     } catch (error) {
-      console.error("Error saving profile:", error);
+      // Handle network errors
+      toast.error("Ошибка сети. Проверьте подключение к интернету.");
+      console.error("Network error saving profile:", error);
     }
   };
 

@@ -264,6 +264,7 @@ export default function BrowseListings({ userId, userLanguage, onBack, apiUrl, a
                             variant="outline"
                             className="flex-1"
                             onClick={() => openTelegram(listing.poster.telegramUsername)}
+                            onPointerDown={(e) => e.preventDefault()}
                           >
                             <MessageCircle className="w-4 h-4 mr-1" />
                             {t("telegram")}
@@ -274,7 +275,8 @@ export default function BrowseListings({ userId, userLanguage, onBack, apiUrl, a
                             size="sm"
                             variant="outline"
                             className="flex-1"
-                            onClick={() => window.open(`tel:${listing.poster.phoneNumber}`)}
+                            onClick={() => window.open(`tel:${listing.poster.phoneNumber}`, "_blank", "noopener,noreferrer")}
+                            onPointerDown={(e) => e.preventDefault()}
                           >
                             <Phone className="w-4 h-4 mr-1" />
                             {t("call")}
@@ -295,6 +297,7 @@ export default function BrowseListings({ userId, userLanguage, onBack, apiUrl, a
                             variant="ghost"
                             className="flex-1"
                             onClick={() => openTelegram(listing.space.ownerTelegram)}
+                            onPointerDown={(e) => e.preventDefault()}
                           >
                             <MessageCircle className="w-3 h-3 mr-1" />
                             {listing.space.ownerTelegram}
@@ -305,7 +308,8 @@ export default function BrowseListings({ userId, userLanguage, onBack, apiUrl, a
                             size="sm"
                             variant="ghost"
                             className="flex-1"
-                            onClick={() => window.open(`tel:${listing.space.ownerPhone}`)}
+                            onClick={() => window.open(`tel:${listing.space.ownerPhone}`, "_blank", "noopener,noreferrer")}
+                            onPointerDown={(e) => e.preventDefault()}
                           >
                             <Phone className="w-3 h-3 mr-1" />
                             {t("call")}

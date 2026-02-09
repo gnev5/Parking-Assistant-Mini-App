@@ -115,14 +115,24 @@ export const getTelegramUsername = (): string => {
 };
 
 export const openTelegramUser = (username: string) => {
-  const webApp = getTelegramWebApp();
   const cleanUsername = username.startsWith("@") ? username.substring(1) : username;
+  const url = `https://t.me/${cleanUsername}`;
   
-  if (webApp) {
-    webApp.openTelegramLink(`https://t.me/${cleanUsername}`);
-  } else {
-    window.open(`https://t.me/${cleanUsername}`, "_blank");
+  // Check if we're in Telegram WebApp
+  if (window.Telegram?.WebApp) {
+    try {
+      // Try openTelegramLink first
+      if (typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+        window.Telegram.WebApp.openTelegramLink(url);
+        return;
+      }
+    } catch (e) {
+      console.warn('openTelegramLink failed, trying fallback');
+    }
   }
+  
+  // Fallback: open in new tab/window
+  window.open(url, "_blank", "noopener,noreferrer");
 };
 
 export const showBackButton = (onClick: () => void) => {
